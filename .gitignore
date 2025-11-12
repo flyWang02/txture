@@ -22,10 +22,6 @@ notebooks/.ipynb_checkpoints/
 *.log
 *.tmp
 
-# Local data (e.g. webcam captures, exports)
-data/
-!data/.gitkeep
-
 # Cache folders (pytest, Ruff, etc.)
 .pytest_cache/
 .ruff_cache/

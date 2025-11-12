@@ -5,8 +5,8 @@ import argparse
 import glob
 from pathlib import Path
 import cv2
-from txt_ure.loaders import load_lut
-from txt_ure.ascii_render import frame_to_ascii
+from txture.loaders import load_lut
+from txture.ascii_render import frame_to_ascii
 from rich import print
 
 BASE = Path(__file__).resolve().parents[1]
@@ -67,8 +67,8 @@ def main():
         print("[red]Error:[/red] Cannot open camera")
         return
 
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
     sys.stdout.write("\x1b[2J")
     sys.stdout.write("\x1b[?25l")
@@ -107,30 +107,30 @@ def main():
                         r, g, b = colors[y][x]
                         segs.append(f"\x1b[38;2;{r};{g};{b}m{ch}")
                     out_lines.append("".join(segs) + "\x1b[0m")
-                    sys.stdout.write("\n".join(out_lines) + "\n")
+                sys.stdout.write("\n".join(out_lines) + "\n")
             else:
                 for line in lines:
                     sys.stdout.write(line + "\n")
             sys.stdout.flush()
 
-            k = cv2.waitKey(1) & 0xFF
+            # k = cv2.waitKey(1) & 0xFF
 
-            if k == 27:  # esc
-                break
-            elif k in (ord("p"), ord("l"), ord("d"), ord("a")):
-                label_map = {
-                    ord("p"): "ascii_punctuation_only",
-                    ord("l"): "ascii_letters_only",
-                    ord("d"): "ascii_digits_only",
-                    ord("a"): "ascii_all",
-                }
-                new_label = label_map[k]
-                files = discover_metric_files()
-                if new_label in files:
-                    lut = load_lut(files[new_label])
-                    label = new_label
-            elif k == ord("c"):
-                args.color = not args.color
+            # if k == 27:  # esc
+            #     break
+            # elif k in (ord("p"), ord("l"), ord("d"), ord("a")):
+            #     label_map = {
+            #         ord("p"): "ascii_punctuation_only",
+            #         ord("l"): "ascii_letters_only",
+            #         ord("d"): "ascii_digits_only",
+            #         ord("a"): "ascii_all",
+            #     }
+            #     new_label = label_map[k]
+            #     files = discover_metric_files()
+            #     if new_label in files:
+            #         lut = load_lut(files[new_label])
+            #         label = new_label
+            # elif k == ord("c"):
+            #     args.color = not args.color
 
             time.sleep(max(0.0, 1.0 / args.fps))
 

@@ -1,1 +1,1 @@
-# TXT-ure: ASCII ART with webcam
+# TXTure: ASCII ART with webcam
