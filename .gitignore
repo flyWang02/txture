@@ -1,0 +1,38 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# MacOS files
+.DS_Store
+
+# VSCode settings
+.vscode/
+
+# Jupyter or experiment files
+notebooks/.ipynb_checkpoints/
+
+# Logs or temp files
+*.log
+*.tmp
+
+# Local data (e.g. webcam captures, exports)
+data/
+!data/.gitkeep
+
+# Cache folders (pytest, Ruff, etc.)
+.pytest_cache/
+.ruff_cache/
+
+# Fonts
+data/fonts/
+!data/fonts/.gitkeep
+
+# Sample files
+data/io/*

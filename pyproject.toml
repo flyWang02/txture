@@ -1,0 +1,25 @@
+[project]
+name = "txt-ure"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "NAMIL", email = "namil0721@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "deepface>=0.0.95",
+    "mediapipe>=0.10.21",
+    "numpy>=1.26.4",
+    "opencv-python>=4.11.0.86",
+    "pillow>=12.0.0",
+    "rich>=14.2.0",
+    "wcwidth>=0.2.14",
+]
+
+[project.scripts]
+txt-ure = "txt_ure.main:main"
+
+[build-system]
+requires = ["uv_build>=0.9.7,<0.10.0"]
+build-backend = "uv_build"
