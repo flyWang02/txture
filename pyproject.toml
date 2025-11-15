@@ -1,5 +1,5 @@
 [project]
-name = "txt-ure"
+name = "txture"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -13,12 +13,11 @@ dependencies = [
     "numpy>=1.26.4",
     "opencv-python>=4.11.0.86",
     "pillow>=12.0.0",
-    "rich>=14.2.0",
     "wcwidth>=0.2.14",
 ]
 
 [project.scripts]
-txt-ure = "txt_ure.main:main"
+txture = "txture.main:main"
 
 [build-system]
 requires = ["uv_build>=0.9.7,<0.10.0"]

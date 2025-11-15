@@ -7,7 +7,6 @@ from pathlib import Path
 import cv2
 from txture.loaders import load_lut
 from txture.ascii_render import frame_to_ascii
-from rich import print
 
 BASE = Path(__file__).resolve().parents[1]
 METRIC_DIR = BASE / "data" / "metrics"
@@ -44,6 +43,15 @@ def main():
         "--cols", type=int, default=0, help="columns count. 0=auto"
     )
     ap.add_argument("--aspect", type=float, default=2.0)
+    ap.add_argument(
+        "--device", type=int, default=0, help="Camera device index"
+    )
+    ap.add_argument(
+        "--equalize",
+        action="store_true",
+        help="Apply histogram equalization to the frame before processing",
+    )
+
     args = ap.parse_args()
 
     if args.lut:
@@ -62,9 +70,22 @@ def main():
 
     print(f"[info] set = {label} color = {args.color} fps = {args.fps} ")
 
-    cap = cv2.VideoCapture(0, cv2.CAP_AVFOUNDATION)
+    cap = cv2.VideoCapture(args.device, cv2.CAP_AVFOUNDATION)
+    if not cap.isOpened():
+        cap = cv2.VideoCapture(args.device)
     if not cap.isOpened():
         print("[red]Error:[/red] Cannot open camera")
+        return
+
+    boot_ok = False
+    for _ in range(30):
+        ok, frame = cap.read()
+        if ok:
+            boot_ok = True
+            break
+        time.sleep(0.1)
+    if not boot_ok:
+        print("[red]Error:[/red] Cannot read from camera")
         return
 
     # cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
@@ -75,19 +96,26 @@ def main():
     sys.stdout.flush()
 
     print(
-        f"set: {label}, color: {args.color}, fps: {args.fps}, cols: {args.cols}, aspect: {args.aspect}"
+        f"set: {label}, color: {args.color}, fps: {args.fps}, cols: {args.cols}, aspect: {args.aspect}",
+        file=sys.stderr,
     )
 
     try:
         while True:
             ok, frame = cap.read()
             if not ok:
-                break
+                time.sleep(0.1)
+                continue
 
             if args.cols > 0:
                 cols = args.cols
             else:
                 cols = max(20, shutil.get_terminal_size((80, 24)).columns - 2)
+
+            if args.equalize:
+                g = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                g = cv2.equalizeHist(g)
+                frame = cv2.cvtColor(g, cv2.COLOR_GRAY2BGR)
 
             lines, colors = frame_to_ascii(
                 frame,
