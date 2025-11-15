@@ -12,7 +12,6 @@ from txture.ascii_maps import (
     make_lut,
     save_metrics_json,
 )
-from rich import print
 
 BASE = Path(__file__).resolve().parents[1]
 FONT = BASE / "data" / "fonts" / "DejaVuSansMono-Bold.ttf"
