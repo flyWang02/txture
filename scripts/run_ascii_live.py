@@ -26,7 +26,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument(
         "--set",
-        default="ascii_punctuation_only",
+        default="ascii_all",
         help="ascii_all | ascii_punctuation_only | ascii_letters_only | ascii_digits_only | ascii_letters_digits_punct",
     )
     ap.add_argument("--lut", default=None, help="Path to custom LUT JSON file")
@@ -141,24 +141,24 @@ def main():
                     sys.stdout.write(line + "\n")
             sys.stdout.flush()
 
-            # k = cv2.waitKey(1) & 0xFF
+            k = cv2.waitKey(1) & 0xFF
 
-            # if k == 27:  # esc
-            #     break
-            # elif k in (ord("p"), ord("l"), ord("d"), ord("a")):
-            #     label_map = {
-            #         ord("p"): "ascii_punctuation_only",
-            #         ord("l"): "ascii_letters_only",
-            #         ord("d"): "ascii_digits_only",
-            #         ord("a"): "ascii_all",
-            #     }
-            #     new_label = label_map[k]
-            #     files = discover_metric_files()
-            #     if new_label in files:
-            #         lut = load_lut(files[new_label])
-            #         label = new_label
-            # elif k == ord("c"):
-            #     args.color = not args.color
+            if k == 27:  # esc
+                break
+            elif k in (ord("p"), ord("l"), ord("d"), ord("a")):
+                label_map = {
+                    ord("p"): "ascii_punctuation_only",
+                    ord("l"): "ascii_letters_only",
+                    ord("d"): "ascii_digits_only",
+                    ord("a"): "ascii_all",
+                }
+                new_label = label_map[k]
+                files = discover_metric_files()
+                if new_label in files:
+                    lut = load_lut(files[new_label])
+                    label = new_label
+            elif k == ord("c"):
+                args.color = not args.color
 
             time.sleep(max(0.0, 1.0 / args.fps))
 
