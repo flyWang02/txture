@@ -1,16 +1,16 @@
 import sys
+from pathlib import Path
+
 import time
 import shutil
 import argparse
 import glob
-from pathlib import Path
-import cv2
 from txture.loaders import load_lut
 from txture.ascii_render import frame_to_ascii
 from txture.devices import open_auto_camera
 
 
-BASE = Path(__file__).resolve().parents[1]
+BASE = Path(__file__).resolve().parents[2]
 METRIC_DIR = BASE / "data" / "metrics"
 
 
@@ -28,7 +28,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument(
         "--set",
-        default="ascii_all",
+        default="ascii_punctuation_only",
         help="ascii_all | ascii_punctuation_only | ascii_letters_only | ascii_digits_only | ascii_letters_digits_punct",
     )
     ap.add_argument(
@@ -73,9 +73,6 @@ def main():
         print("[red]Error:[/red] Cannot read from camera")
         return
 
-    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-
     sys.stdout.write("\x1b[2J")
     sys.stdout.write("\x1b[?25l")
     sys.stdout.flush()
@@ -105,7 +102,7 @@ def main():
                 colorize=args.color,
             )
 
-            sys.stdout.write("\x1b[H")
+            sys.stdout.write("\x1b[H\x1b[2J")
 
             if args.color and colors is not None:
                 out_lines = []
@@ -120,25 +117,6 @@ def main():
                 for line in lines:
                     sys.stdout.write(line + "\n")
             sys.stdout.flush()
-
-            k = cv2.waitKey(1) & 0xFF
-
-            if k == 27:  # esc
-                break
-            elif k in (ord("p"), ord("l"), ord("d"), ord("a")):
-                label_map = {
-                    ord("p"): "ascii_punctuation_only",
-                    ord("l"): "ascii_letters_only",
-                    ord("d"): "ascii_digits_only",
-                    ord("a"): "ascii_all",
-                }
-                new_label = label_map[k]
-                files = discover_metric_files()
-                if new_label in files:
-                    lut = load_lut(files[new_label])
-                    label = new_label
-            elif k == ord("c"):
-                args.color = not args.color
 
             time.sleep(max(0.0, 1.0 / args.fps))
 
