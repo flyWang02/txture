@@ -7,6 +7,8 @@ from pathlib import Path
 import cv2
 from txture.loaders import load_lut
 from txture.ascii_render import frame_to_ascii
+from txture.devices import open_auto_camera
+
 
 BASE = Path(__file__).resolve().parents[1]
 METRIC_DIR = BASE / "data" / "metrics"
@@ -29,7 +31,6 @@ def main():
         default="ascii_all",
         help="ascii_all | ascii_punctuation_only | ascii_letters_only | ascii_digits_only | ascii_letters_digits_punct",
     )
-    ap.add_argument("--lut", default=None, help="Path to custom LUT JSON file")
     ap.add_argument(
         "--fps",
         type=float,
@@ -43,39 +44,23 @@ def main():
         "--cols", type=int, default=0, help="columns count. 0=auto"
     )
     ap.add_argument("--aspect", type=float, default=2.0)
-    ap.add_argument(
-        "--device", type=int, default=0, help="Camera device index"
-    )
-    ap.add_argument(
-        "--equalize",
-        action="store_true",
-        help="Apply histogram equalization to the frame before processing",
-    )
 
     args = ap.parse_args()
 
-    if args.lut:
-        lut_path = Path(args.lut)
-        lut = load_lut(lut_path)
-        label = lut_path.stem
-
-    else:
-        files = discover_metric_files()
-        if args.set not in files:
-            print(f'[red]Error:[/red] Metric set "{args.set}" not found.')
-            return
-        lut_path = files[args.set]
-        lut = load_lut(lut_path)
-        label = args.set
+    files = discover_metric_files()
+    if args.set not in files:
+        print(f'[red]Error:[/red] Metric set "{args.set}" not found.')
+        return
+    lut = load_lut(files[args.set])
+    label = args.set
 
     print(f"[info] set = {label} color = {args.color} fps = {args.fps} ")
 
-    cap = cv2.VideoCapture(args.device, cv2.CAP_AVFOUNDATION)
-    if not cap.isOpened():
-        cap = cv2.VideoCapture(args.device)
-    if not cap.isOpened():
-        print("[red]Error:[/red] Cannot open camera")
-        return
+    cap, cam_info = open_auto_camera(max_devices=5)
+    print(
+        f"using camera index={cam_info.index} backend={cam_info.backend} "
+        f"score = {cam_info.score:.2f}"
+    )
 
     boot_ok = False
     for _ in range(30):
@@ -111,11 +96,6 @@ def main():
                 cols = args.cols
             else:
                 cols = max(20, shutil.get_terminal_size((80, 24)).columns - 2)
-
-            if args.equalize:
-                g = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                g = cv2.equalizeHist(g)
-                frame = cv2.cvtColor(g, cv2.COLOR_GRAY2BGR)
 
             lines, colors = frame_to_ascii(
                 frame,
