@@ -9,6 +9,8 @@ from txture.loaders import load_lut
 from txture.ascii_render import frame_to_ascii
 from txture.devices import open_auto_camera
 
+from threading import Thread, Event
+from txture.controller import state as ctrl_state, start_controller
 
 BASE = Path(__file__).resolve().parents[2]
 METRIC_DIR = BASE / "data" / "metrics"
@@ -61,6 +63,16 @@ def main():
         f"using camera index={cam_info.index} backend={cam_info.backend} "
         f"score = {cam_info.score:.2f}"
     )
+
+    controller_thread = Thread(
+        target=start_controller, args=(ctrl_state,), daemon=True
+    )
+    controller_thread.start()
+
+    ctrl_state.charset = args.set
+    ctrl_state.color = args.color
+
+    ctrl_state.stop = Event()
 
     boot_ok = False
     for _ in range(30):
