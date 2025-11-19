@@ -8,6 +8,7 @@ import glob
 from txture.loaders import load_lut
 from txture.ascii_render import frame_to_ascii
 from txture.devices import open_auto_camera
+from txture.pipeline import process_frame
 import cv2
 import numpy as np
 
@@ -49,6 +50,9 @@ def main():
         "--preview",
         action="store_true",
         help="Show processed frame in OpenCV window",
+    )
+    ap.add_argument(
+        "--outline", action="store_true", help="Use outline mode (edge based)"
     )
     ap.add_argument("--aspect", type=float, default=2.0)
 
@@ -101,33 +105,32 @@ def main():
             else:
                 cols = max(20, shutil.get_terminal_size((80, 24)).columns - 2)
 
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            edges = cv2.Canny(gray, 100, 200)
+            features = process_frame(frame, outline_mode=args.outline)
 
             if args.preview:
-                vis_orig = frame
-                vis_edges = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+                vis_orig = features.orig
+                vis_det = features.det_vis
+                vis_proc = features.processed
 
                 target_height = 240
                 h, w = vis_orig.shape[:2]
-
                 new_w = int(w * target_height / h)
 
                 vis_orig = cv2.resize(vis_orig, (new_w, target_height))
-                vis_edges = cv2.resize(vis_edges, (new_w, target_height))
+                vis_det = cv2.resize(vis_det, (new_w, target_height))
+                vis_proc = cv2.resize(vis_proc, (new_w, target_height))
 
-                tiles = [vis_orig, vis_edges]
-
+                tiles = [vis_orig, vis_det, vis_proc]
                 preview = np.hstack(tiles)
 
                 cv2.imshow("preview", preview)
                 key = cv2.waitKey(1) & 0xFF
                 if key == 27:
                     break
-                continue
+                # continue
 
             lines, colors = frame_to_ascii(
-                frame,
+                features.processed,
                 lut,
                 cols=cols,
                 char_aspect=args.aspect,
