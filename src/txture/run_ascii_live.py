@@ -8,9 +8,9 @@ import glob
 from txture.loaders import load_lut
 from txture.ascii_render import frame_to_ascii
 from txture.devices import open_auto_camera
+import cv2
+import numpy as np
 
-from threading import Thread, Event
-from txture.controller import state as ctrl_state, start_controller
 
 BASE = Path(__file__).resolve().parents[2]
 METRIC_DIR = BASE / "data" / "metrics"
@@ -45,6 +45,11 @@ def main():
     ap.add_argument(
         "--cols", type=int, default=0, help="columns count. 0=auto"
     )
+    ap.add_argument(
+        "--preview",
+        action="store_true",
+        help="Show processed frame in OpenCV window",
+    )
     ap.add_argument("--aspect", type=float, default=2.0)
 
     args = ap.parse_args()
@@ -63,16 +68,6 @@ def main():
         f"using camera index={cam_info.index} backend={cam_info.backend} "
         f"score = {cam_info.score:.2f}"
     )
-
-    controller_thread = Thread(
-        target=start_controller, args=(ctrl_state,), daemon=True
-    )
-    controller_thread.start()
-
-    ctrl_state.charset = args.set
-    ctrl_state.color = args.color
-
-    ctrl_state.stop = Event()
 
     boot_ok = False
     for _ in range(30):
@@ -106,6 +101,31 @@ def main():
             else:
                 cols = max(20, shutil.get_terminal_size((80, 24)).columns - 2)
 
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            edges = cv2.Canny(gray, 100, 200)
+
+            if args.preview:
+                vis_orig = frame
+                vis_edges = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+
+                target_height = 240
+                h, w = vis_orig.shape[:2]
+
+                new_w = int(w * target_height / h)
+
+                vis_orig = cv2.resize(vis_orig, (new_w, target_height))
+                vis_edges = cv2.resize(vis_edges, (new_w, target_height))
+
+                tiles = [vis_orig, vis_edges]
+
+                preview = np.hstack(tiles)
+
+                cv2.imshow("preview", preview)
+                key = cv2.waitKey(1) & 0xFF
+                if key == 27:
+                    break
+                continue
+
             lines, colors = frame_to_ascii(
                 frame,
                 lut,
@@ -134,6 +154,7 @@ def main():
 
     finally:
         cap.release()
+        cv2.destroyAllWindows()
         sys.stdout.write("\x1b[?25h")
         sys.stdout.flush()
 
